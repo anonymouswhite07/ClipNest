@@ -9,6 +9,7 @@ const validateURL = (url) => {
         /youtu\.be/,
         /instagram\.com/,
         /facebook\.com/,
+        /fb\.watch/,
         /twitter\.com/,
         /tiktok\.com/
     ];

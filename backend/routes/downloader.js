@@ -55,11 +55,20 @@ router.post('/info', async (req, res) => {
             noPlaylist: true,
             forceIpv4: true,
             addHeader: [
-                'referer:youtube.com',
+                'referer:facebook.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         };
 
+        // Platform-specific header adjustments
+        if (platform === 'YouTube') {
+            options.addHeader[0] = 'referer:youtube.com';
+        }
+        if (platform === 'Instagram') {
+            options.addHeader[0] = 'referer:instagram.com';
+        }
+
+        // Only apply player_client to YouTube
         if (platform === 'YouTube' && clientType) {
             options.extractorArgs = `youtube:player_client=${clientType}`;
         }
