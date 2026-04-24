@@ -1,0 +1,24 @@
+{
+  "name": "clipnest",
+  "version": "1.0.0",
+  "description": "Ultra-Premium Media Downloader - ClipNest",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "yt-dlp-exec": "^1.0.1",
+    "morgan": "^1.10.0",
+    "axios": "^1.6.2",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipNest | High-Quality YouTube & Instagram Video Downloader</title>
+    <meta name="description" content="Download YouTube and Instagram videos in high quality with ClipNest. A fast, clean, and professional tool for media extraction. Safe and easy to use.">
+    <meta name="keywords" content="video downloader, youtube downloader, instagram downloader, download youtube videos, save instagram reels, media extractor">
+    <meta name="author" content="ClipNest Team">
+    
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ENR97ZG9Y5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-ENR97ZG9Y5');
+    </script>
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3252528898114371" crossorigin="anonymous"></script>
+    
+    <!-- Bing Webmaster Tools -->
+    <meta name="msvalidate.01" content="EEA3B1A1AF847A096464F8A3EB3D182C" />
+    
+    <!-- Icons & PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090b">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://clipnest.white0.me/">
+    <meta property="og:title" content="ClipNest | High-Quality Video Downloader">
+    <meta property="og:description" content="Professional-grade tool to save high-quality media from YouTube and Instagram instantly.">
+    <meta property="og:image" content="https://clipnest.white0.me/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="ClipNest | High-Quality Video Downloader">
+    <meta property="twitter:description" content="Professional-grade tool to save high-quality media from YouTube and Instagram instantly.">
+
+    <link rel="canonical" href="https://clipnest.white0.me/">
+    <link rel="stylesheet" href="style.css?v=1.2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090b">
+</head>
+<body>
+    <div class="app-bg"></div>
+
+    <main class="container">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>ClipNest</span>
+            </div>
+        </nav>
+
+        <header class="hero">
+            <h1 class="headline">Download <span>YouTube</span>, <span>Facebook</span> & <br><span>Instagram</span> videos.</h1>
+            <p class="subtitle">A professional-grade tool to save high-quality media from your favorite platforms instantly.</p>
+            <div class="platform-support">
+                <div class="platform-pill"><i class="fa-brands fa-youtube"></i> YouTube</div>
+                <div class="platform-pill"><i class="fa-brands fa-instagram"></i> Instagram</div>
+                <div class="platform-pill"><i class="fa-brands fa-facebook"></i> Facebook</div>
+                <div class="platform-pill"><i class="fa-solid fa-plus"></i> More</div>
+            </div>
+        </header>
+
+        <section class="glass-card main-card">
+            <div class="input-wrapper" id="dropZone">
+                <i class="fa-solid fa-link input-icon"></i>
+                <input type="text" id="urlInput" placeholder="Paste YouTube, Facebook, or Instagram link..." autocomplete="off">
+                <button id="pasteBtn" class="btn-icon" title="Paste from Clipboard">
+                    <i class="fa-solid fa-paste"></i>
+                </button>
+                <button id="fetchBtn" class="btn-primary">
+                    <span>Fetch</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            
+            <div id="loadingState" class="hidden">
+                <div class="loader-wrapper">
+                    <div class="loader"></div>
+                    <p>Analyzing media source...</p>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="hidden">
+                <div class="media-preview">
+                    <div class="thumbnail-container">
+                        <img id="thumbnail" src="" alt="Thumbnail">
+                        <div class="badge" id="platformBadge">YouTube</div>
+                    </div>
+                    <div class="media-info">
+                        <h2 id="mediaTitle">Video Title Goes Here</h2>
+                        <p id="mediaUploader" class="uploader">Uploader Name</p>
+                        <div class="meta-tags" id="mediaDuration">
+                            <span><i class="fa-regular fa-clock"></i> --:--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="options-container">
+                    <h3>Select Format & Quality</h3>
+                    <div class="format-grid" id="formatList">
+                        <!-- Formats will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorState" class="hidden">
+                <div class="error-content">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p id="errorMessage">Something went wrong. Please try again.</p>
+                    <button class="btn-secondary" onclick="resetApp()">Try Another Link</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <h2 class="section-title">How to download?</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-num">01</div>
+                    <h3>Paste URL</h3>
+                    <p>Copy the video link from YouTube or Instagram and paste it into the box above.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">02</div>
+                    <h3>Analyze</h3>
+                    <p>Click "Fetch" and our engine will extract all available qualities and formats instantly.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">03</div>
+                    <h3>Save Media</h3>
+                    <p>Select your preferred quality and click download. Your media will save directly to your device.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="trust-footer">
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <span class="status-dot pulsing"></span>
+                    <span>System: Online</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>256-bit Secure</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Zero-Logs Policy</span>
+                </div>
+            </div>
+            <div class="legal-links" style="margin-top: 12px; display: flex; gap: 1rem; justify-content: center; font-size: 0.85rem;">
+                <a href="/privacy.html" style="color: var(--primary); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Privacy Policy</a>
+                <span style="color: var(--border);">|</span>
+                <a href="/terms.html" style="color: var(--primary); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Terms of Service</a>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Ad Interstitial Modal -->
+    <div id="adModal" class="hidden modal-overlay">
+        <div class="modal-content glass-card">
+            <h3>Preparing your download...</h3>
+            <p class="modal-subtitle">Supporting ClipNest allows us to keep it free.</p>
+            
+            <div class="ad-container">
+                <!-- AdSense Ad Unit -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-3252528898114371"
+                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+            </div>
+            
+            <div class="countdown-wrapper">
+                <div class="loader-circle"></div>
+                <p>Starting in <span id="adCountdown" class="countdown-number">5</span> seconds</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cookie Consent Banner -->
+    <div id="cookieBanner" class="hidden glass-card cookie-banner">
+        <p>We use cookies (via Google Analytics & AdSense) to improve your experience and fund our free service. <a href="/privacy.html" style="color: var(--primary); text-decoration: none;">Learn more</a>.</p>
+        <button id="acceptCookies" class="btn-primary" style="padding: 0.5rem 1rem; width: auto; font-size: 0.9rem;">
+            <span>Got it</span>
+        </button>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="app.js?v=1.4"></script>
+</body>
+</html>
