@@ -1,8 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const youtubedl = require('yt-dlp-exec');
+const { create } = require('yt-dlp-exec');
 const axios = require('axios');
 const { validateURL, getPlatform } = require('../utils/urlHelper');
+
+// Use the manually installed binary in production, fallback to default in dev
+const binPath = process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined;
+const youtubedl = binPath ? create(binPath) : require('yt-dlp-exec');
 
 // @route   POST /api/v1/downloader/info
 // @desc    Get media information (formats, thumbnail, title)
@@ -24,15 +28,6 @@ router.post('/info', async (req, res) => {
 
     console.log(`[API] Fetching info for URL: ${url}`);
     
-    // Check if yt-dlp is available
-    try {
-        const bin = process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined;
-        const { version } = await youtubedl.version({}, { binaryLocation: bin });
-        console.log(`[API] yt-dlp Engine Version: ${version}`);
-    } catch (vErr) {
-        console.error(`[API] CRITICAL: yt-dlp engine not found or failed!`, vErr.message);
-    }
-    
     try {
         const platform = getPlatform(url);
         console.log(`[API] Detected Platform: ${platform}`);
@@ -49,8 +44,6 @@ router.post('/info', async (req, res) => {
                 'referer:youtube.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
             ]
-        }, {
-            binaryLocation: process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined
         });
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
