@@ -22,7 +22,9 @@ RUN npm install --production
 # Copy the rest of the application
 COPY . .
 
-# Ensure yt-dlp binary is executable (handled by the package, but safety first)
+# Ensure yt-dlp binary is executable
+RUN if [ -f node_modules/yt-dlp-exec/bin/yt-dlp ]; then chmod +x node_modules/yt-dlp-exec/bin/yt-dlp; fi
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=5000
