@@ -34,7 +34,29 @@ const getPlatform = (url) => {
     return 'Other';
 };
 
+/**
+ * Normalizes URLs (e.g. converting Shorts to standard Watch URLs)
+ * @param {string} url 
+ * @returns {string}
+ */
+const normalizeURL = (url) => {
+    try {
+        if (url.includes('youtube.com/shorts/')) {
+            const videoId = url.split('/shorts/')[1]?.split('?')[0];
+            if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+        if (url.includes('youtu.be/')) {
+            const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+            if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+    } catch (e) {
+        return url;
+    }
+    return url;
+};
+
 module.exports = {
     validateURL,
-    getPlatform
+    getPlatform,
+    normalizeURL
 };

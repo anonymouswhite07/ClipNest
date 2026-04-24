@@ -2,7 +2,19 @@ const express = require('express');
 const router = express.Router();
 const { create } = require('yt-dlp-exec');
 const axios = require('axios');
-const { validateURL, getPlatform } = require('../utils/urlHelper');
+const { validateURL, getPlatform, normalizeURL } = require('../utils/urlHelper');
+
+// Simple in-memory cache for successful extractions (TTL: 1 hour)
+const extractionCache = new Map();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+// Hard timeout helper (8 seconds)
+const withTimeout = (promise, ms = 8000) => {
+    const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Extraction timed out. YouTube is responding slowly.')), ms)
+    );
+    return Promise.race([promise, timeout]);
+};
 
 // Use the manually installed binary in production, fallback to default in dev
 const binPath = process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined;
@@ -11,7 +23,7 @@ const youtubedl = binPath ? create(binPath) : require('yt-dlp-exec');
 // @route   POST /api/v1/downloader/info
 // @desc    Get media information (formats, thumbnail, title)
 router.post('/info', async (req, res) => {
-    const { url } = req.body;
+    let { url } = req.body;
 
     // Input Sanitization & Defense
     if (!url || typeof url !== 'string') {
@@ -26,8 +38,17 @@ router.post('/info', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid or unsupported URL' });
     }
 
-    console.log(`[API] Fetching info for URL: ${url}`);
-    
+    // 1. Normalize URL (Shorts -> Watch URL)
+    url = normalizeURL(url);
+    console.log(`[API] Optimized URL: ${url}`);
+
+    // 2. Check Cache
+    const cachedData = extractionCache.get(url);
+    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_TTL)) {
+        console.log(`[API] Cache Hit for: ${url}`);
+        return res.json(cachedData.data);
+    }
+
     const platform = getPlatform(url);
     console.log(`[API] Detected Platform: ${platform}`);
 
@@ -43,7 +64,6 @@ router.post('/info', async (req, res) => {
             forceIpv4: true,
             addHeader: [
                 'referer:youtube.com',
-                'accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         });
@@ -52,13 +72,13 @@ router.post('/info', async (req, res) => {
     try {
         let output;
         try {
-            // Attempt 1: Standard Nuclear Bypass
-            output = await tryExtraction('tv,mweb');
+            // 3. Attempt 1 with hard timeout
+            output = await withTimeout(tryExtraction('tv,mweb'), 8000);
         } catch (e1) {
-            if (e1.message.includes('confirm you’re not a bot')) {
-                console.warn('[API] Bot detected on Attempt 1. Rotating to Attempt 2 (Android/Embedded)...');
-                // Attempt 2: Android/Embedded fallback
-                output = await tryExtraction('android,web_embedded');
+            if (e1.message.includes('confirm you’re not a bot') || e1.message.includes('timed out')) {
+                console.warn(`[API] ${e1.message}. Rotating to Attempt 2 (Android/Embedded)...`);
+                // 4. Attempt 2 with slightly different client
+                output = await withTimeout(tryExtraction('android,web_embedded'), 8000);
             } else {
                 throw e1;
             }
@@ -111,7 +131,7 @@ router.post('/info', async (req, res) => {
             return (b.filesize || 0) - (a.filesize || 0);
         });
 
-        res.json({
+        const responseData = {
             success: true,
             platform,
             metadata: {
@@ -125,7 +145,15 @@ router.post('/info', async (req, res) => {
                 upload_date: output.upload_date || null
             },
             formats: sortedFormats
+        };
+
+        // 5. Save to Cache
+        extractionCache.set(url, {
+            timestamp: Date.now(),
+            data: responseData
         });
+
+        res.json(responseData);
 
     } catch (error) {
         console.error('yt-dlp error details:', {
