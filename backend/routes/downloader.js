@@ -49,56 +49,59 @@ router.post('/info', async (req, res) => {
         return res.json(cachedData.data);
     }
 
+    console.log(`[API] Fetching info for URL: ${url}`);
+    
     const platform = getPlatform(url);
     console.log(`[API] Detected Platform: ${platform}`);
 
     const tryExtraction = async (clientType, timeoutMs = 6000, signal) => {
-        console.log(`[API] Starting parallel attempt: ${clientType}`);
-        return await withTimeout(youtubedl(url, {
+        const options = {
             dumpSingleJson: true,
             noCheckCertificates: true,
             noWarnings: true,
             preferFreeFormats: true,
             ignoreConfig: true,
             noPlaylist: true,
-            extractorArgs: `youtube:player_client=${clientType}`,
             forceIpv4: true,
             addHeader: [
                 'referer:youtube.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
-        }, { signal }), timeoutMs);
+        };
+
+        // Only apply player_client to YouTube
+        if (platform === 'YouTube' && clientType) {
+            options.extractorArgs = `youtube:player_client=${clientType}`;
+        }
+
+        return await withTimeout(youtubedl(url, options, { signal }), timeoutMs);
     };
 
     try {
         let output = null;
-        const controller = new AbortController();
 
-        try {
-            // 3. PARALLEL TRICK: Race Web and Android clients
-            // This is the fastest way to get a result on Render
-            output = await Promise.any([
-                tryExtraction('web', 6000, controller.signal),
-                tryExtraction('android', 6000, controller.signal)
-            ]);
-            
-            // Cancel the other request immediately
-            controller.abort();
-            console.log('[API] Parallel race won!');
-        } catch (raceError) {
-            console.warn('[API] Parallel race failed or timed out. Trying TV fallback...');
-            
+        if (platform === 'YouTube') {
+            const controller = new AbortController();
             try {
-                // 4. Fallback to TV client (extremely robust)
-                output = await tryExtraction('tv', 6000);
-            } catch (fallbackError) {
-                // If even TV fails, try Embedded as a last resort
+                // Parallel race for YouTube
+                output = await Promise.any([
+                    tryExtraction('web', 8000, controller.signal),
+                    tryExtraction('android', 8000, controller.signal)
+                ]);
+                controller.abort();
+                console.log('[API] YouTube Parallel race won!');
+            } catch (raceError) {
+                console.warn('[API] YouTube Parallel race failed. Trying TV fallback...');
                 try {
-                    output = await tryExtraction('web_embedded', 4000);
-                } catch (lastError) {
-                    throw new Error('All extraction strategies (Parallel & Fallback) have failed.');
+                    output = await tryExtraction('tv', 8000);
+                } catch (fallbackError) {
+                    throw new Error('YouTube extraction failed after all attempts.');
                 }
             }
+        } else {
+            // Standard direct extraction for Instagram, Facebook, and TikTok
+            console.log(`[API] Standard extraction for ${platform}`);
+            output = await tryExtraction(null, 12000);
         }
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
