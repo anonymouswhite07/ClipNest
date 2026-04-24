@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Fetch error:', error);
-            showError('Connection error. Please check your backend.');
+            showError(`Connection error: ${error.message || 'Check your internet or server status.'}`);
         } finally {
             loadingState.classList.add('hidden');
             fetchBtn.disabled = false;

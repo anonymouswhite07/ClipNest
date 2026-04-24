@@ -22,8 +22,11 @@ router.post('/info', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid or unsupported URL' });
     }
 
+    console.log(`[API] Fetching info for URL: ${url}`);
+    
     try {
         const platform = getPlatform(url);
+        console.log(`[API] Detected Platform: ${platform}`);
         
         // Fetch metadata using yt-dlp
         const output = await youtubedl(url, {
@@ -36,6 +39,8 @@ router.post('/info', async (req, res) => {
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
             ]
         });
+        
+        console.log(`[API] Successfully extracted metadata for: ${output.title}`);
 
         // DEBUG: Inspect raw output in terminal
         console.log(`[Metadata Engine] Platform: ${platform} | Title: ${output.title}`);
