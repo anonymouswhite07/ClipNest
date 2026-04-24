@@ -28,21 +28,18 @@ router.post('/info', async (req, res) => {
 
     console.log(`[API] Fetching info for URL: ${url}`);
     
-    try {
-        const platform = getPlatform(url);
-        console.log(`[API] Detected Platform: ${platform}`);
-        
-        // Fetch metadata using yt-dlp
-        const output = await youtubedl(url, {
+    const platform = getPlatform(url);
+    console.log(`[API] Detected Platform: ${platform}`);
+
+    const tryExtraction = async (clientType = 'tv,mweb') => {
+        return await youtubedl(url, {
             dumpSingleJson: true,
             noCheckCertificates: true,
             noWarnings: true,
             preferFreeFormats: true,
             ignoreConfig: true,
             noPlaylist: true,
-            // NUCLEAR BYPASS: Use TV and Mobile Web clients (harder to block)
-            extractorArgs: 'youtube:player_client=tv,mweb',
-            // Force IPv4 as cloud IPv6 ranges are often insta-blocked
+            extractorArgs: `youtube:player_client=${clientType}`,
             forceIpv4: true,
             addHeader: [
                 'referer:youtube.com',
@@ -50,6 +47,22 @@ router.post('/info', async (req, res) => {
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         });
+    };
+
+    try {
+        let output;
+        try {
+            // Attempt 1: Standard Nuclear Bypass
+            output = await tryExtraction('tv,mweb');
+        } catch (e1) {
+            if (e1.message.includes('confirm you’re not a bot')) {
+                console.warn('[API] Bot detected on Attempt 1. Rotating to Attempt 2 (Android/Embedded)...');
+                // Attempt 2: Android/Embedded fallback
+                output = await tryExtraction('android,web_embedded');
+            } else {
+                throw e1;
+            }
+        }
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
 

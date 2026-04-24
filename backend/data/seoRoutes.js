@@ -85,6 +85,23 @@ const seoRoutes = {
             { step: '3', title: 'Select Quality', text: 'Choose between HD (High Definition) or SD (Standard Definition) quality.' },
             { step: '4', title: 'Instant Save', text: 'Click download to save the Facebook video to your computer or phone.' }
         ]
+    },
+    '/tiktok-downloader': {
+        title: 'TikTok Downloader - Download TikTok Videos Without Watermark',
+        description: 'Download TikTok videos without watermark in HD quality. Free TikTok video saver for mobile and desktop. No software required.',
+        h1: 'TikTok <span class="gradient-text">Downloader</span>',
+        subtitle: 'Save TikTok videos without the watermark in seconds.',
+        platform: 'TikTok',
+        faqs: [
+            { q: 'Can I download TikTok videos without a watermark?', a: 'Yes, ClipNest automatically extracts the clean video source without the TikTok logo.' },
+            { q: 'Is it free to download TikTok videos?', a: 'Absolutely, ClipNest is free for all TikTok downloads.' }
+        ],
+        guide: [
+            { step: '1', title: 'Copy TikTok Link', text: 'Open the TikTok app and tap the Share button, then select "Copy Link".' },
+            { step: '2', title: 'Paste to ClipNest', text: 'Paste the link into the box at the top of this page.' },
+            { step: '3', title: 'Analyze Video', text: 'ClipNest will find the high-quality version of the video without the watermark.' },
+            { step: '4', title: 'Save to Gallery', text: 'Hit download and save the clean TikTok video to your device.' }
+        ]
     }
 };
 
