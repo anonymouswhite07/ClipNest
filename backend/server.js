@@ -7,11 +7,16 @@ const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const path = require('path');
 const downloaderRoutes = require('./routes/downloader');
+const seoRoutes = require('./data/seoRoutes');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// View Engine (EJS for SSR)
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(helmet({
@@ -40,9 +45,16 @@ app.use(express.static(path.join(__dirname, '../frontend'), cacheOptions));
 // Routes (Versioning for future-proofing)
 app.use('/api/v1/downloader', apiLimiter, downloaderRoutes);
 
-// Base route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// SEO Landing Pages Handler
+const renderSEOPage = (req, res) => {
+    const path = req.path;
+    const pageData = seoRoutes[path] || seoRoutes['/'];
+    res.render('index', { pageData });
+};
+
+// Map SEO routes
+Object.keys(seoRoutes).forEach(route => {
+    app.get(route, renderSEOPage);
 });
 
 app.get('/robots.txt', (req, res) => {
@@ -64,10 +76,14 @@ app.use((err, req, res, next) => {
     });
 });
 
-const HOST = '0.0.0.0';
-app.listen(PORT, HOST, () => {
-    console.log(`🚀 ClipNest Production Server Running`);
-    console.log(`🔗 Local:   http://localhost:${PORT}`);
-    console.log(`📱 Network: Use your computer's IP address on port ${PORT}`);
-    console.log(`\nTIP: Use ngrok for HTTPS to test PWA features on mobile!`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    const HOST = '0.0.0.0';
+    app.listen(PORT, HOST, () => {
+        console.log(`🚀 ClipNest Production Server Running`);
+        console.log(`🔗 Local:   http://localhost:${PORT}`);
+        console.log(`📱 Network: Use your computer's IP address on port ${PORT}`);
+        console.log(`\nTIP: Use ngrok for HTTPS to test PWA features on mobile!`);
+    });
+}
+
+module.exports = app;

@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+dist/
+npm-debug.log
+vercel.json
