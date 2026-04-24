@@ -24,6 +24,14 @@ router.post('/info', async (req, res) => {
 
     console.log(`[API] Fetching info for URL: ${url}`);
     
+    // Check if yt-dlp is available
+    try {
+        const { version } = await youtubedl.version();
+        console.log(`[API] yt-dlp Engine Version: ${version}`);
+    } catch (vErr) {
+        console.error(`[API] CRITICAL: yt-dlp engine not found or failed!`, vErr.message);
+    }
+    
     try {
         const platform = getPlatform(url);
         console.log(`[API] Detected Platform: ${platform}`);
@@ -98,8 +106,8 @@ router.post('/info', async (req, res) => {
         console.error('yt-dlp error:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to fetch media info.',
-            error: error.message 
+            message: `Extraction Error: ${error.message.split('\n')[0]}`,
+            details: error.message 
         });
     }
 });
