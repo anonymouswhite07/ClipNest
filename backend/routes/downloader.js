@@ -25,36 +25,27 @@ const youtubedl = binPath ? create(binPath) : require('yt-dlp-exec');
 router.post('/info', async (req, res) => {
     let { url } = req.body;
 
-    // Input Sanitization & Defense
     if (!url || typeof url !== 'string') {
         return res.status(400).json({ success: false, message: 'Valid URL string is required' });
-    }
-
-    if (url.length > 2048) {
-        return res.status(400).json({ success: false, message: 'URL is too long' });
     }
 
     if (!validateURL(url)) {
         return res.status(400).json({ success: false, message: 'Invalid or unsupported URL' });
     }
 
-    // 1. Normalize URL (Shorts -> Watch URL)
     url = normalizeURL(url);
-    console.log(`[API] Optimized URL: ${url}`);
-
-    // 2. Check Cache
+    
+    // 1. Check Cache
     const cachedData = extractionCache.get(url);
     if (cachedData && (Date.now() - cachedData.timestamp < CACHE_TTL)) {
-        console.log(`[API] Cache Hit for: ${url}`);
+        console.log(`[API] Cache Hit: ${url}`);
         return res.json(cachedData.data);
     }
 
-    console.log(`[API] Fetching info for URL: ${url}`);
-    
     const platform = getPlatform(url);
-    console.log(`[API] Detected Platform: ${platform}`);
+    console.log(`[API] Fetching info: ${url} (${platform})`);
 
-    const tryExtraction = async (clientType, timeoutMs = 6000, signal) => {
+    const tryExtraction = async (clientType, timeoutMs = 8000, signal) => {
         const options = {
             dumpSingleJson: true,
             noCheckCertificates: true,
@@ -69,7 +60,6 @@ router.post('/info', async (req, res) => {
             ]
         };
 
-        // Only apply player_client to YouTube
         if (platform === 'YouTube' && clientType) {
             options.extractorArgs = `youtube:player_client=${clientType}`;
         }
@@ -103,12 +93,6 @@ router.post('/info', async (req, res) => {
             console.log(`[API] Standard extraction for ${platform}`);
             output = await tryExtraction(null, 12000);
         }
-        
-        console.log(`[API] Successfully extracted metadata for: ${output.title}`);
-
-        // DEBUG: Inspect raw output in terminal
-        console.log(`[Metadata Engine] Platform: ${platform} | Title: ${output.title}`);
-        console.log(`[Metadata Engine] Stats -> Views: ${output.view_count}, Likes: ${output.like_count}`);
 
         // Filter and map formats
         const formats = output.formats
@@ -116,10 +100,8 @@ router.post('/info', async (req, res) => {
             .map(f => {
                 const hasVideo = f.vcodec !== 'none';
                 const hasAudio = f.acodec !== 'none';
-                
                 let qualityLabel = f.format_note || f.resolution || 'N/A';
                 
-                // Professional UX labeling
                 const isVideoOnly = hasVideo && !hasAudio;
                 const isAudioOnly = hasAudio && !hasVideo;
                 const isComplete = hasVideo && hasAudio;
@@ -144,7 +126,6 @@ router.post('/info', async (req, res) => {
             })
             .filter(f => f.url && (f.hasAudio || f.hasVideo));
 
-        // Sort: Complete videos first, then by quality/filesize
         const sortedFormats = formats.sort((a, b) => {
             if (a.isComplete && !b.isComplete) return -1;
             if (!a.isComplete && b.isComplete) return 1;
@@ -167,7 +148,7 @@ router.post('/info', async (req, res) => {
             formats: sortedFormats
         };
 
-        // 5. Save to Cache
+        // 2. Save to Cache
         extractionCache.set(url, {
             timestamp: Date.now(),
             data: responseData
@@ -176,16 +157,10 @@ router.post('/info', async (req, res) => {
         res.json(responseData);
 
     } catch (error) {
-        console.error('yt-dlp error details:', {
-            message: error.message,
-            stderr: error.stderr,
-            stdout: error.stdout,
-            command: error.command
-        });
-
+        console.error('Extraction Error:', error.message);
         res.status(500).json({ 
             success: false, 
-            message: `Extraction Error: ${error.stderr || error.message.split('\n')[0]}`,
+            message: `Extraction Error: ${error.message}`,
             details: error.stderr || error.message 
         });
     }

@@ -60,20 +60,16 @@ app.use(express.static(path.join(__dirname, '../frontend'), cacheOptions));
 // Routes (Versioning for future-proofing)
 app.use('/api/v1/downloader', apiLimiter, downloaderRoutes);
 
-// SEO Landing Pages Handler
-const renderSEOPage = (req, res) => {
-    const path = req.path;
-    // Map /contact and /faq to the root page data if they don't have their own
-    const pageData = seoRoutes[path] || seoRoutes['/'];
+// SEO Dynamic Routes (SSR with EJS)
+app.get(['/', '/youtube-downloader', '/youtube-to-mp3', '/instagram-downloader', '/facebook-downloader', '/tiktok-downloader'], (req, res) => {
+    const route = req.path;
+    const pageData = seoRoutes[route] || seoRoutes['/'];
     res.render('index', { pageData });
-};
+});
 
-// Explicitly handle contact and faq if not in seoRoutes
-app.get(['/contact', '/faq'], renderSEOPage);
-
-// Map SEO routes
-Object.keys(seoRoutes).forEach(route => {
-    app.get(route, renderSEOPage);
+// Fallback for contact and faq
+app.get(['/contact', '/faq'], (req, res) => {
+    res.render('index', { pageData: seoRoutes['/'] });
 });
 
 app.get('/robots.txt', (req, res) => {
