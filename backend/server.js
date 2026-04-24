@@ -51,6 +51,10 @@ const cacheOptions = {
     maxAge: '1d',
     etag: true
 };
+
+// Redirect legacy index.html to root
+app.get('/index.html', (req, res) => res.redirect(301, '/'));
+
 app.use(express.static(path.join(__dirname, '../frontend'), cacheOptions));
 
 // Routes (Versioning for future-proofing)
@@ -59,9 +63,13 @@ app.use('/api/v1/downloader', apiLimiter, downloaderRoutes);
 // SEO Landing Pages Handler
 const renderSEOPage = (req, res) => {
     const path = req.path;
+    // Map /contact and /faq to the root page data if they don't have their own
     const pageData = seoRoutes[path] || seoRoutes['/'];
     res.render('index', { pageData });
 };
+
+// Explicitly handle contact and faq if not in seoRoutes
+app.get(['/contact', '/faq'], renderSEOPage);
 
 // Map SEO routes
 Object.keys(seoRoutes).forEach(route => {
