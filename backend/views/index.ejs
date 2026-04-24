@@ -170,42 +170,36 @@
             </div>
         </section>
 
+        <% if (pageData.guide) { %>
         <section class="how-it-works">
-            <h2 class="section-title">How to download?</h2>
+            <h2 class="section-title">How to Download <%= pageData.platform %> Videos</h2>
             <div class="steps-grid">
+                <% pageData.guide.forEach(item => { %>
                 <div class="step-card">
-                    <div class="step-num">01</div>
-                    <h3>Paste URL</h3>
-                    <p>Copy the video link from <%= pageData.platform %> and paste it into the box above.</p>
+                    <div class="step-num"><%= item.step %></div>
+                    <h3><%= item.title %></h3>
+                    <p><%= item.text %></p>
                 </div>
-                <div class="step-card">
-                    <div class="step-num">02</div>
-                    <h3>Analyze</h3>
-                    <p>Click "Fetch" and our engine will extract all available qualities and formats instantly.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-num">03</div>
-                    <h3>Save Media</h3>
-                    <p>Select your preferred quality and click download. Your media will save directly to your device.</p>
-                </div>
+                <% }) %>
             </div>
         </section>
+        <% } %>
 
         <section class="seo-content-section">
             <h2 class="section-title">Why use ClipNest?</h2>
             <div class="features-grid">
                 <div class="feature-item">
-                    <i class="fa-solid fa-bolt"></i>
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                     <h4>Ultra Fast</h4>
                     <p>Our server-side engine processes your requests in under 2 seconds.</p>
                 </div>
                 <div class="feature-item">
-                    <i class="fa-solid fa-shield-heart"></i>
+                    <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
                     <h4>100% Safe</h4>
                     <p>No malware, no sketchy popups. Just your media, delivered securely.</p>
                 </div>
                 <div class="feature-item">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
                     <h4>High Quality</h4>
                     <p>Download in 1080p, 4K, or 320kbps MP3 whenever available.</p>
                 </div>
@@ -214,7 +208,7 @@
             <h2 class="section-title">Frequently Asked Questions</h2>
             <div class="faq-grid">
                 <% pageData.faqs.forEach(faq => { %>
-                <div class="faq-item glass-card">
+                <div class="faq-card glass-card">
                     <h4><%= faq.q %></h4>
                     <p><%= faq.a %></p>
                 </div>
@@ -222,25 +216,33 @@
             </div>
         </section>
 
-        <footer class="trust-footer">
-            <div class="trust-badges">
-                <div class="trust-badge">
-                    <span class="status-dot pulsing"></span>
-                    <span>System: Online</span>
+        <footer class="main-footer">
+            <div class="footer-grid">
+                <div class="footer-info">
+                    <div class="logo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>ClipNest</span>
+                    </div>
+                    <p>Fast, free, and secure media extraction tool for social media platforms.</p>
                 </div>
-                <div class="trust-badge">
-                    <i class="fa-solid fa-lock"></i>
-                    <span>256-bit Secure</span>
-                </div>
-                <div class="trust-badge">
-                    <i class="fa-solid fa-user-shield"></i>
-                    <span>Zero-Logs Policy</span>
+                <div class="footer-links">
+                    <div class="link-col">
+                        <h5>Tools</h5>
+                        <a href="/youtube-downloader">YouTube Downloader</a>
+                        <a href="/youtube-to-mp3">YouTube to MP3</a>
+                        <a href="/instagram-downloader">Instagram Downloader</a>
+                        <a href="/facebook-downloader">Facebook Downloader</a>
+                    </div>
+                    <div class="link-col">
+                        <h5>Legal</h5>
+                        <a href="/privacy-policy">Privacy Policy</a>
+                        <a href="/terms-of-service">Terms of Service</a>
+                        <a href="/contact">Contact Us</a>
+                    </div>
                 </div>
             </div>
-            <div class="legal-links" style="margin-top: 12px; display: flex; gap: 1rem; justify-content: center; font-size: 0.85rem;">
-                <a href="/privacy.html" style="color: var(--primary); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Privacy Policy</a>
-                <span style="color: var(--border);">|</span>
-                <a href="/terms.html" style="color: var(--primary); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Terms of Service</a>
+            <div class="footer-bottom">
+                <p>&copy; 2023 ClipNest. Made for creators.</p>
             </div>
         </footer>
     </main>
