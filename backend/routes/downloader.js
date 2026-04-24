@@ -71,10 +71,14 @@ router.post('/info', async (req, res) => {
 
         // Platform-specific header adjustments
         if (platform === 'YouTube') {
-            options.addHeader[0] = 'referer:youtube.com';
+            options.addHeader[0] = 'referer:https://www.youtube.com/ ';
         }
         if (platform === 'Instagram') {
-            options.addHeader[0] = 'referer:instagram.com';
+            options.addHeader[0] = 'referer:https://www.instagram.com/ ';
+            options.addHeader[1] = 'user-agent:Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
+        }
+        if (platform === 'Facebook') {
+            options.addHeader[0] = 'referer:https://www.facebook.com/ ';
         }
 
         // Only apply player_client to YouTube
