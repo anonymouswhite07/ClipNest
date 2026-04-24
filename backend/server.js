@@ -12,7 +12,17 @@ const seoRoutes = require('./data/seoRoutes');
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', 1); // Required for Render/Vercel/Cloudflare proxies
+app.set('trust proxy', 1);
+
+// Enforce non-WWW (Canonicalization)
+app.use((req, res, next) => {
+    if (req.headers.host && req.headers.host.startsWith('www.')) {
+        const newHost = req.headers.host.slice(4);
+        return res.redirect(301, `https://${newHost}${req.originalUrl}`);
+    }
+    next();
+});
+
 const PORT = process.env.PORT || 5000;
 
 // View Engine (EJS for SSR)

@@ -1,0 +1,20 @@
+# ClipNest | Media Downloader
+
+ClipNest is a professional-grade tool designed for high-quality media extraction from YouTube, Instagram, and Facebook. It focuses on speed, security, and user privacy.
+
+## Core Features
+- YouTube to MP4/MP3 (up to 4K and 320kbps)
+- Instagram Reels & Story Downloader
+- Facebook Video Downloader
+- Fast server-side extraction engine
+- Zero-logs privacy policy
+
+## Technical Architecture
+- Backend: Node.js / Express
+- Templating: EJS (Server-Side Rendering)
+- Engine: yt-dlp
+- Deployment: Docker on Render
+
+## Content Permissions
+- Only publicly accessible content is allowed for extraction.
+- Users are responsible for complying with the terms of service of the respective platforms.

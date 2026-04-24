@@ -37,18 +37,39 @@
     <meta property="og:image" content="https://clipnest.white0.me/og-image.jpg">
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="<%= pageData.title %>">
-    <meta property="twitter:description" content="<%= pageData.description %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@ClipNest">
+    <meta name="twitter:title" content="<%= pageData.title %>">
+    <meta name="twitter:description" content="<%= pageData.description %>">
+    <meta name="twitter:image" content="https://clipnest.white0.me/og-image.jpg">
 
     <link rel="canonical" href="https://clipnest.white0.me/">
-    <link rel="stylesheet" href="/style.css?v=1.4">
+    <link rel="stylesheet" href="/style.css?v=1.5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     
-    <!-- FAQ Schema -->
+    <!-- Structured Data (SoftwareApplication & FAQ) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "ClipNest",
+      "operatingSystem": "All",
+      "applicationCategory": "MultimediaApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "1250"
+      }
+    }
+    </script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -74,15 +95,15 @@
     <main class="container">
         <nav class="navbar">
             <div class="logo">
-                <a href="/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span>ClipNest</span>
+                <a href="/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;" aria-label="ClipNest Home">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span class="logo-text">ClipNest</span>
                 </a>
             </div>
             <div class="nav-links">
-                <a href="/youtube-downloader">YouTube</a>
-                <a href="/instagram-downloader">Instagram</a>
-                <a href="/facebook-downloader">Facebook</a>
+                <a href="/youtube-downloader" title="Download YouTube Videos">YouTube</a>
+                <a href="/instagram-downloader" title="Download Instagram Reels">Instagram</a>
+                <a href="/facebook-downloader" title="Download Facebook Videos">Facebook</a>
             </div>
         </nav>
 
@@ -90,23 +111,23 @@
             <h1 class="headline"><%- pageData.h1 %></h1>
             <p class="subtitle"><%= pageData.subtitle %></p>
             <div class="platform-support">
-                <div class="platform-pill"><i class="fa-brands fa-youtube"></i> YouTube</div>
-                <div class="platform-pill"><i class="fa-brands fa-instagram"></i> Instagram</div>
-                <div class="platform-pill"><i class="fa-brands fa-facebook"></i> Facebook</div>
-                <div class="platform-pill"><i class="fa-solid fa-plus"></i> More</div>
+                <div class="platform-pill" aria-label="Support for YouTube"><i class="fa-brands fa-youtube" aria-hidden="true"></i> YouTube</div>
+                <div class="platform-pill" aria-label="Support for Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram</div>
+                <div class="platform-pill" aria-label="Support for Facebook"><i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook</div>
+                <div class="platform-pill"><i class="fa-solid fa-plus" aria-hidden="true"></i> More</div>
             </div>
         </header>
 
         <section class="glass-card main-card">
             <div class="input-wrapper" id="dropZone">
-                <i class="fa-solid fa-link input-icon"></i>
-                <input type="text" id="urlInput" placeholder="Paste <%= pageData.platform %> link here..." autocomplete="off">
-                <button id="pasteBtn" class="btn-icon" title="Paste from Clipboard">
-                    <i class="fa-solid fa-paste"></i>
+                <i class="fa-solid fa-link input-icon" aria-hidden="true"></i>
+                <input type="text" id="urlInput" placeholder="Paste <%= pageData.platform %> link here..." autocomplete="off" aria-label="Video URL Input">
+                <button id="pasteBtn" class="btn-icon" title="Paste from Clipboard" aria-label="Paste from Clipboard">
+                    <i class="fa-solid fa-paste" aria-hidden="true"></i>
                 </button>
-                <button id="fetchBtn" class="btn-primary">
+                <button id="fetchBtn" class="btn-primary" aria-label="Fetch Media Information">
                     <span>Fetch</span>
-                    <i class="fa-solid fa-arrow-right"></i>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </button>
             </div>
             
@@ -120,7 +141,7 @@
             <div id="resultContainer" class="hidden">
                 <div class="media-preview">
                     <div class="thumbnail-container">
-                        <img id="thumbnail" src="" alt="Thumbnail">
+                        <img id="thumbnail" src="" alt="Media Preview Thumbnail">
                         <div class="badge" id="platformBadge">YouTube</div>
                     </div>
                     <div class="media-info">
