@@ -52,8 +52,8 @@ router.post('/info', async (req, res) => {
     const platform = getPlatform(url);
     console.log(`[API] Detected Platform: ${platform}`);
 
-    const tryExtraction = async (clientType, timeoutMs = 6000) => {
-        console.log(`[API] Attempting extraction with client: ${clientType} (${timeoutMs}ms timeout)`);
+    const tryExtraction = async (clientType, timeoutMs = 6000, signal) => {
+        console.log(`[API] Starting parallel attempt: ${clientType}`);
         return await withTimeout(youtubedl(url, {
             dumpSingleJson: true,
             noCheckCertificates: true,
@@ -67,30 +67,38 @@ router.post('/info', async (req, res) => {
                 'referer:youtube.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
-        }), timeoutMs);
+        }, { signal }), timeoutMs);
     };
 
     try {
         let output = null;
-        let lastError = null;
-        
-        // Strategy: 4-Stage Fallback (Web -> Android -> TV -> Embedded)
-        // We use a 3s timeout for each to ensure total time < 12s
-        const strategies = ['web', 'android', 'tv', 'web_embedded'];
-        
-        for (const client of strategies) {
-            try {
-                output = await tryExtraction(client, 3000); 
-                if (output) break; // Success!
-            } catch (err) {
-                lastError = err;
-                console.warn(`[API] Client ${client} failed: ${err.message}`);
-                // Continue to next strategy
-            }
-        }
+        const controller = new AbortController();
 
-        if (!output) {
-            throw lastError || new Error('All extraction strategies failed.');
+        try {
+            // 3. PARALLEL TRICK: Race Web and Android clients
+            // This is the fastest way to get a result on Render
+            output = await Promise.any([
+                tryExtraction('web', 6000, controller.signal),
+                tryExtraction('android', 6000, controller.signal)
+            ]);
+            
+            // Cancel the other request immediately
+            controller.abort();
+            console.log('[API] Parallel race won!');
+        } catch (raceError) {
+            console.warn('[API] Parallel race failed or timed out. Trying TV fallback...');
+            
+            try {
+                // 4. Fallback to TV client (extremely robust)
+                output = await tryExtraction('tv', 6000);
+            } catch (fallbackError) {
+                // If even TV fails, try Embedded as a last resort
+                try {
+                    output = await tryExtraction('web_embedded', 4000);
+                } catch (lastError) {
+                    throw new Error('All extraction strategies (Parallel & Fallback) have failed.');
+                }
+            }
         }
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
