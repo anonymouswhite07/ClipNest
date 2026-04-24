@@ -8,10 +8,10 @@ const { validateURL, getPlatform, normalizeURL } = require('../utils/urlHelper')
 const extractionCache = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-// Hard timeout helper (8 seconds)
+// Hard timeout helper
 const withTimeout = (promise, ms = 8000) => {
     const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Extraction timed out. YouTube is responding slowly.')), ms)
+        setTimeout(() => reject(new Error('Extraction timed out. The platform is responding slowly.')), ms)
     );
     return Promise.race([promise, timeout]);
 };
@@ -44,6 +44,15 @@ router.post('/info', async (req, res) => {
 
     const platform = getPlatform(url);
     console.log(`[API] Fetching info: ${url} (${platform})`);
+
+    // Temporary: Disable YouTube extraction
+    if (platform === 'YouTube') {
+        return res.status(200).json({
+            success: false,
+            message: 'YouTube Downloader is coming soon! We are upgrading our servers for HD quality.',
+            platform: 'YouTube'
+        });
+    }
 
     const tryExtraction = async (clientType, timeoutMs = 8000, signal) => {
         const options = {
@@ -100,7 +109,7 @@ router.post('/info', async (req, res) => {
         } else {
             // Standard direct extraction for Instagram, Facebook, and TikTok
             console.log(`[API] Standard extraction for ${platform}`);
-            output = await tryExtraction(null, 12000);
+            output = await tryExtraction(null, 15000);
         }
 
         // Filter and map formats
