@@ -19,11 +19,12 @@ COPY package*.json ./
 # Install Node dependencies
 RUN npm install --production
 
+# Manually download yt-dlp binary (Ensures it's present and executable)
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod a+rx /usr/local/bin/yt-dlp
+
 # Copy the rest of the application
 COPY . .
-
-# Ensure yt-dlp binary is executable
-RUN if [ -f node_modules/yt-dlp-exec/bin/yt-dlp ]; then chmod +x node_modules/yt-dlp-exec/bin/yt-dlp; fi
 
 # Set environment variables
 ENV NODE_ENV=production
