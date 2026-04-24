@@ -60,9 +60,14 @@ router.post('/info', async (req, res) => {
                 
                 let qualityLabel = f.format_note || f.resolution || 'N/A';
                 
-                // Clean up technical terms for a professional UX
-                if (qualityLabel.toLowerCase().includes('dash video')) qualityLabel = 'Video';
-                if (qualityLabel.toLowerCase().includes('dash audio')) qualityLabel = 'Audio';
+                // Professional UX labeling
+                const isVideoOnly = hasVideo && !hasAudio;
+                const isAudioOnly = hasAudio && !hasVideo;
+                const isComplete = hasVideo && hasAudio;
+                
+                if (isVideoOnly) qualityLabel += ' (No Audio)';
+                if (isAudioOnly) qualityLabel = 'Audio Only (MP3/M4A)';
+                if (isComplete && platform === 'Facebook') qualityLabel = f.format_note === 'hd' ? 'High Definition (Audio Incl.)' : 'Standard Quality (Audio Incl.)';
                 
                 return {
                     id: f.format_id,
@@ -74,11 +79,18 @@ router.post('/info', async (req, res) => {
                     url: f.url,
                     hasAudio,
                     hasVideo,
-                    isComplete: hasVideo && hasAudio,
+                    isComplete,
                     note: f.format_note || ''
                 };
             })
-            .filter(f => f.url);
+            .filter(f => f.url && (f.hasAudio || f.hasVideo));
+
+        // Sort: Complete videos first, then by quality/filesize
+        const sortedFormats = formats.sort((a, b) => {
+            if (a.isComplete && !b.isComplete) return -1;
+            if (!a.isComplete && b.isComplete) return 1;
+            return (b.filesize || 0) - (a.filesize || 0);
+        });
 
         res.json({
             success: true,
@@ -93,16 +105,21 @@ router.post('/info', async (req, res) => {
                 likes: output.like_count || null,
                 upload_date: output.upload_date || null
             },
-            // Sort to put complete videos (with audio) first
-            formats: formats.sort((a, b) => (b.isComplete - a.isComplete) || (b.filesize - a.filesize))
+            formats: sortedFormats
         });
 
     } catch (error) {
-        console.error('yt-dlp error:', error);
+        console.error('yt-dlp error details:', {
+            message: error.message,
+            stderr: error.stderr,
+            stdout: error.stdout,
+            command: error.command
+        });
+
         res.status(500).json({ 
             success: false, 
-            message: `Extraction Error: ${error.message.split('\n')[0]}`,
-            details: error.message 
+            message: `Extraction Error: ${error.stderr || error.message.split('\n')[0]}`,
+            details: error.stderr || error.message 
         });
     }
 });
