@@ -27,7 +27,7 @@ router.post('/info', async (req, res) => {
     // Check if yt-dlp is available
     try {
         const bin = process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined;
-        const { version } = await youtubedl.version({ binaryLocation: bin });
+        const { version } = await youtubedl.version({}, { binaryLocation: bin });
         console.log(`[API] yt-dlp Engine Version: ${version}`);
     } catch (vErr) {
         console.error(`[API] CRITICAL: yt-dlp engine not found or failed!`, vErr.message);
@@ -39,7 +39,6 @@ router.post('/info', async (req, res) => {
         
         // Fetch metadata using yt-dlp
         const output = await youtubedl(url, {
-            binaryLocation: process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined,
             dumpSingleJson: true,
             noCheckCertificates: true,
             noWarnings: true,
@@ -50,6 +49,8 @@ router.post('/info', async (req, res) => {
                 'referer:youtube.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
             ]
+        }, {
+            binaryLocation: process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined
         });
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
