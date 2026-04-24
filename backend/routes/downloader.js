@@ -52,8 +52,9 @@ router.post('/info', async (req, res) => {
     const platform = getPlatform(url);
     console.log(`[API] Detected Platform: ${platform}`);
 
-    const tryExtraction = async (clientType = 'tv,mweb') => {
-        return await youtubedl(url, {
+    const tryExtraction = async (clientType, timeoutMs = 6000) => {
+        console.log(`[API] Attempting extraction with client: ${clientType} (${timeoutMs}ms timeout)`);
+        return await withTimeout(youtubedl(url, {
             dumpSingleJson: true,
             noCheckCertificates: true,
             noWarnings: true,
@@ -66,22 +67,30 @@ router.post('/info', async (req, res) => {
                 'referer:youtube.com',
                 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
-        });
+        }), timeoutMs);
     };
 
     try {
-        let output;
-        try {
-            // 3. Attempt 1 with hard timeout
-            output = await withTimeout(tryExtraction('tv,mweb'), 8000);
-        } catch (e1) {
-            if (e1.message.includes('confirm you’re not a bot') || e1.message.includes('timed out')) {
-                console.warn(`[API] ${e1.message}. Rotating to Attempt 2 (Android/Embedded)...`);
-                // 4. Attempt 2 with slightly different client
-                output = await withTimeout(tryExtraction('android,web_embedded'), 8000);
-            } else {
-                throw e1;
+        let output = null;
+        let lastError = null;
+        
+        // Strategy: 4-Stage Fallback (Web -> Android -> TV -> Embedded)
+        // We use a 3s timeout for each to ensure total time < 12s
+        const strategies = ['web', 'android', 'tv', 'web_embedded'];
+        
+        for (const client of strategies) {
+            try {
+                output = await tryExtraction(client, 3000); 
+                if (output) break; // Success!
+            } catch (err) {
+                lastError = err;
+                console.warn(`[API] Client ${client} failed: ${err.message}`);
+                // Continue to next strategy
             }
+        }
+
+        if (!output) {
+            throw lastError || new Error('All extraction strategies failed.');
         }
         
         console.log(`[API] Successfully extracted metadata for: ${output.title}`);
