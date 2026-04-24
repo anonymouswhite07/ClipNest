@@ -38,7 +38,6 @@ router.post('/info', async (req, res) => {
             noCheckCertificates: true,
             noWarnings: true,
             preferFreeFormats: true,
-            noSandbox: true,
             ignoreConfig: true,
             addHeader: [
                 'referer:youtube.com',
