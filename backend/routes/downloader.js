@@ -39,9 +39,12 @@ router.post('/info', async (req, res) => {
             noWarnings: true,
             preferFreeFormats: true,
             ignoreConfig: true,
+            noPlaylist: true,
+            // Advanced bypass for "Sign in to confirm you're not a bot"
+            extractorArgs: 'youtube:player_client=ios,android,web',
             addHeader: [
                 'referer:youtube.com',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+                'user-agent:Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1'
             ]
         });
         
