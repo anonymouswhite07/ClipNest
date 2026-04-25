@@ -93,6 +93,22 @@ router.post('/info', async (req, res) => {
             options.extractorArgs = `youtube:player_client=${clientType}`;
         }
 
+        // 🛡️ Instagram Embed Fallback (No-API / No-Cookie Trick)
+        if (platform === 'Instagram') {
+            try {
+                return await withTimeout(youtubedl(url, options, { signal }), timeoutMs);
+            } catch (err) {
+                if (err.message.includes('login required') || err.message.includes('rate-limit')) {
+                    console.log('[Fallback] Instagram blocked. Trying Embed Scraping trick...');
+                    // Convert Reel URL to Embed URL
+                    const embedUrl = url.split('?')[0].replace(/\/$/, '') + '/embed/captioned/';
+                    // Try extraction on the public embed page (often unblocked)
+                    return await withTimeout(youtubedl(embedUrl, options, { signal }), timeoutMs);
+                }
+                throw err;
+            }
+        }
+
         return await withTimeout(youtubedl(url, options, { signal }), timeoutMs);
     };
 
