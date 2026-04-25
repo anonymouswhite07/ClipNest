@@ -33,5 +33,5 @@ ENV PORT=5000
 # Expose the application port
 EXPOSE 5000
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application (update yt-dlp to latest nightly on every boot)
+CMD yt-dlp --update-to nightly 2>/dev/null; npm start
