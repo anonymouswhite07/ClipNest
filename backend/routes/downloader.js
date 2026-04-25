@@ -8,14 +8,6 @@ const { validateURL, getPlatform, normalizeURL } = require('../utils/urlHelper')
 const extractionCache = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-// Hard timeout helper
-const withTimeout = (promise, ms = 8000) => {
-    const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Extraction timed out. The platform is responding slowly.')), ms)
-    );
-    return Promise.race([promise, timeout]);
-};
-
 // Use the manually installed binary in production, fallback to default in dev
 const binPath = process.env.NODE_ENV === 'production' ? '/usr/local/bin/yt-dlp' : undefined;
 const youtubedl = binPath ? create(binPath) : require('yt-dlp-exec');
@@ -45,16 +37,17 @@ router.post('/info', async (req, res) => {
     const platform = getPlatform(url);
     console.log(`[API] Fetching info: ${url} (${platform})`);
 
-    // Temporary: Disable YouTube extraction
+    // Temporary: YouTube coming soon
     if (platform === 'YouTube') {
-        return res.status(200).json({
+        return res.json({
             success: false,
             message: 'YouTube Downloader is coming soon! We are upgrading our servers for HD quality.',
             platform: 'YouTube'
         });
     }
 
-    const tryExtraction = async (clientType, timeoutMs = 8000, signal) => {
+    try {
+        // Simple, clean yt-dlp extraction — the "old method" that works
         const options = {
             dumpSingleJson: true,
             noCheckCertificates: true,
@@ -63,81 +56,12 @@ router.post('/info', async (req, res) => {
             ignoreConfig: true,
             noPlaylist: true,
             addHeader: [
-                'referer:facebook.com',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'accept-language: en-US,en;q=0.9'
+                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         };
 
-        // Platform-specific header adjustments
-        if (platform === 'YouTube') {
-            options.addHeader[0] = 'referer:https://www.youtube.com/';
-        }
-        if (platform === 'Instagram') {
-            options.addHeader = [
-                'referer:https://www.instagram.com/',
-                'user-agent:Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-                'x-ig-app-id:936619743392459',
-                'x-asbd-id:129477',
-                'sec-fetch-dest:empty',
-                'sec-fetch-mode:cors',
-                'sec-fetch-site:same-origin'
-            ];
-        }
-        if (platform === 'Facebook') {
-            options.addHeader[0] = 'referer:https://www.facebook.com/';
-        }
-
-        // Only apply player_client to YouTube
-        if (platform === 'YouTube' && clientType) {
-            options.extractorArgs = `youtube:player_client=${clientType}`;
-        }
-
-        // 🛡️ Instagram Embed Fallback (No-API / No-Cookie Trick)
-        if (platform === 'Instagram') {
-            try {
-                return await withTimeout(youtubedl(url, options, { signal }), timeoutMs);
-            } catch (err) {
-                if (err.message.includes('login required') || err.message.includes('rate-limit')) {
-                    console.log('[Fallback] Instagram blocked. Trying Embed Scraping trick...');
-                    // Convert Reel URL to Embed URL
-                    const embedUrl = url.split('?')[0].replace(/\/$/, '') + '/embed/captioned/';
-                    // Try extraction on the public embed page (often unblocked)
-                    return await withTimeout(youtubedl(embedUrl, options, { signal }), timeoutMs);
-                }
-                throw err;
-            }
-        }
-
-        return await withTimeout(youtubedl(url, options, { signal }), timeoutMs);
-    };
-
-    try {
-        let output = null;
-
-        if (platform === 'YouTube') {
-            const controller = new AbortController();
-            try {
-                // Parallel race for YouTube
-                output = await Promise.any([
-                    tryExtraction('web', 8000, controller.signal),
-                    tryExtraction('android', 8000, controller.signal)
-                ]);
-                controller.abort();
-                console.log('[API] YouTube Parallel race won!');
-            } catch (raceError) {
-                console.warn('[API] YouTube Parallel race failed. Trying TV fallback...');
-                try {
-                    output = await tryExtraction('tv', 8000);
-                } catch (fallbackError) {
-                    throw new Error('YouTube extraction failed after all attempts.');
-                }
-            }
-        } else {
-            // Standard direct extraction for Instagram, Facebook, and TikTok
-            console.log(`[API] Standard extraction for ${platform}`);
-            output = await tryExtraction(null, 15000);
-        }
+        console.log(`[API] Extracting with yt-dlp for ${platform}...`);
+        const output = await youtubedl(url, options);
 
         // Filter and map formats
         const formats = output.formats
@@ -203,10 +127,32 @@ router.post('/info', async (req, res) => {
 
     } catch (error) {
         console.error('Extraction Error:', error.message);
-        res.status(500).json({ 
+        
+        // Clean error message — strip yt-dlp binary path noise
+        let userMessage = error.message || 'Extraction failed.';
+        if (userMessage.includes('ERROR:')) {
+            userMessage = userMessage.split('ERROR:').pop().trim();
+        }
+        // Remove the binary path from the message
+        userMessage = userMessage.replace(/Command failed.*?yt-dlp\s+/i, '');
+        userMessage = userMessage.replace(/\/usr\/local\/bin\/yt-dlp\s*/g, '');
+        userMessage = userMessage.replace(/--[\w-]+\s*/g, '');
+        userMessage = userMessage.replace(/https?:\/\/\S+\s*/g, '');
+        userMessage = userMessage.trim();
+
+        // Make it user-friendly
+        if (userMessage.includes('login required') || userMessage.includes('rate-limit')) {
+            userMessage = 'This content requires login or is temporarily blocked. Please try a different link.';
+        } else if (userMessage.includes('not available')) {
+            userMessage = 'This content is not available. It might be private or removed.';
+        } else if (!userMessage || userMessage.length < 5) {
+            userMessage = 'Extraction failed. Please try a different link.';
+        }
+
+        res.json({ 
             success: false, 
-            message: `Extraction Error: ${error.message}`,
-            details: error.stderr || error.message 
+            message: userMessage,
+            platform: platform || 'Unknown'
         });
     }
 });
