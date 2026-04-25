@@ -62,10 +62,11 @@ router.post('/info', async (req, res) => {
             preferFreeFormats: true,
             ignoreConfig: true,
             noPlaylist: true,
-            forceIpv4: true,
+            forceIpv4: false, // Allow IPv6 (often unblocked on Render)
             addHeader: [
                 'referer:facebook.com',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'accept-language: en-US,en;q=0.9'
             ]
         };
 
